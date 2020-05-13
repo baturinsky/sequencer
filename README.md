@@ -11,12 +11,11 @@ playing sequence with such name in parralel.
 
 * as before, but with (parameters) - call function with these parameters, as array split by ",". Can use numbers and strings without "" and spaces. 
 
-Example:
+Example (uses https://github.com/KilledByAPixel/ZzFX):
 
 ```typescript
-  let lib = sequencer(
-    {zzfx:zzfx, say:(text)=>document.querySelector("p").innerHTML += text + "
-  "},
+  let seq = sequencer(
+    {zzfx:zzfx, say:(text)=>console.log(text)},
     `
     a: zzfx(1.7,0,50,0.03,0.05,0.3,,2,,,,,,-0.1)
     b: zzfx(1.5,0.5,270,,0.1,,1,1.5,,,,,,,,0.1,0.01)
@@ -25,7 +24,7 @@ Example:
     `
   );
 
-  lib("say(hi) seq2 1 b 0.5 b b 0.5 b b b").play();
+  seq("say(hi) seq2 1 b 0.5 b b 0.5 b b b").play();
 
 ```
 
