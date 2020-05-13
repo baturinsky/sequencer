@@ -1,0 +1,157 @@
+<script>
+
+class SequencePlayer {
+    constructor(seq) {
+        this.seq = seq;
+        this.time = 0;
+        this.current = 0;
+        this.over = false;
+    }
+    continue(dTime) {
+        this.time += dTime;
+        let q = this.seq;
+        while (q[this.current][0] < this.time) {
+            q[this.current][1]();
+            this.current++;
+            if (this.current >= q.length) {
+                this.over = true;
+                if (this.onEnd) {
+                    this.onEnd();
+                }
+                return false;
+            }
+        }
+        return true;
+    }
+    play(timeScale = 1000) {
+        let last = 0;
+        let self = this;
+        function step(timestamp) {
+            let dTime = last ? timestamp - last : 0;
+            last = timestamp;
+            if (self.continue(dTime / timeScale))
+                requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+    }
+}
+function toNumber(bit) {
+    let splitAt = bit.search("/");
+    let num = 0;
+    if (splitAt >= 0) {
+        num =
+            (splitAt == 0 ? 1 : Number(bit.substr(0, splitAt))) /
+                Number(bit.substr(splitAt + 1));
+    }
+    else {
+        num = Number(bit);
+    }
+    return num;
+}
+class SequenceBuilder {
+    constructor(str, lib, timeScale = 1) {
+        this.seq = [];
+        str = str.replace(/([a-zA-Z_][a-zA-Z_0-9]+)\(([^)]+)\)/g, (m, a, b) => `${a}(${b.replace(/ /g, "")})`);
+        let split = str.trim().split(" ");
+        let time = 0;
+        for (let bit of split) {
+            let isEffect = bit.search(/[a-zA-Z_]/) >= 0;
+            if (isEffect) {
+                let fields = bit.match(/([a-zA-Z_][a-zA-Z_0-9]+)\(([^)]+)\)/) || [null, bit, null];
+                let effect = lib[fields[1]];
+                if (effect instanceof Function) {
+                    if (fields[2]) {
+                        let args = fields[2].split(",");
+                        this.seq.push([time, () => { effect(...args); }]);
+                    }
+                    else
+                        this.seq.push([time, effect]);
+                }
+                else {
+                    this.mix(effect, time);
+                }
+            }
+            else {
+                time += timeScale * toNumber(bit);
+            }
+        }
+    }
+    mix(other, delay = 0) {
+        this.seq = this.seq.concat((other instanceof SequenceBuilder ? other.seq : other).map(([t, f]) => [
+            t + delay,
+            f,
+        ]));
+        this.seq.sort((a, b) => a[0] - b[0]);
+        return this;
+    }
+    static build(str, lib, timeScale = 1) {
+        return new SequenceBuilder(str, lib, timeScale).seq;
+    }
+}
+class SequenceCollection {
+    constructor(lib = {}, program = "") {
+        this.lib = lib;
+        if (program) {
+            program.split("\n").map(s => {
+                let line = s.trim().split(":");
+                if (line.length == 2)
+                    this.add(line[0], line[1]);
+            });
+        }
+    }
+    add(id, seqCode) {
+        this.lib[id] = new SequenceBuilder(seqCode, this.lib).seq;
+        return this;
+    }
+    seq(id) {
+        return this.lib[id];
+    }
+}
+function sequencer(lib = {}, program = "") {
+    let collection = new SequenceCollection(lib, program);
+    return (sequence) => new SequencePlayer(new SequenceBuilder(sequence, collection.lib).seq);
+}
+
+
+let zzfxV=.3 // volume
+let zzfx=    // play sound
+(I=1,J=.05,g=220,f=0,h=0,m=.1,n=0,K=1,r=0,z=0,t=0,A=0,u=0,B=0,v=0,L=0,e=0,d=2*Math.PI,b=44100,w=p=>2*p*Math.random()-p,C=p=>0<p?1:-1,M=r*=500*d/b**2,D=g*=(1+w(J))*d/b,N=C(v)*d/4,q=[],E=0,F=0,c=0,k=1,G=0,H=0,a=0,O,l,x,y=zzfxX.createBufferSource())=>{f=99+f*b|0;h=h*b|0;m=m*b|0;e=e*b|0;z*=500*d/b**3;l=f+h+m+e;v*=d/b;t*=d/b;A*=b;for(u*=b;c<l;q[c++]=a)++H>100*L&&(H=0,a=E*g*Math.sin(F*v-N),a=n?1<n?2<n?3<n?Math.sin((a%d)**3):Math.max(Math.min(Math.tan(a),1),-1):1-(2*a/d%2+2)%2:1-4*Math.abs(Math.round(a/d)-a/d):Math.sin(a),a=C(a)*Math.abs(a)**K,a*=I*zzfxV*(c<f?c/f:c<f+h?1:c<l-e?1-(c-f-h)/m:0),a=e?a/2+(e>c?0:(c<l-e?1:(c-l)/e)*q[c-e]/2):a),E+=1+w(B),F+=1+w(B),g+=r+=z,k&&++k>A&&(D+=t,g+=t,k=0),u&&++G>u&&(g=D,r=M,G=1,k=k||1);x=zzfxX.createBuffer(1,q.length,b);x.getChannelData(0).set(q);y.buffer=x;y.connect(zzfxX.destination);y.start()};
+let zzfxX=new AudioContext
+
+let lib = sequencer(
+  {zzfx, say:(text)=>document.querySelector("p").innerHTML += text + "<br/>"},
+  `
+  a: zzfx(1.7,0,50,0.03,0.05,0.3,,2,,,,,,-0.1)
+  b: zzfx(1.5,0.5,270,,0.1,,1,1.5,,,,,,,,0.1,0.01)
+  seq1: a 1 a 1 a /8 b say(a) 7/8 a 1 a
+  seq2: a /8 a /8 a /8 say(mooo) seq1 5/4 seq1
+  `
+);
+
+function play(){
+  lib(document.getElementById("program").value).play();
+}
+
+</script>
+
+<style>input{width:90%}</style>
+
+<button onclick="play()">Play</button>
+<input id="program" value="say(hi) seq2 1 b 0.5 b b 0.5 b b b">
+<p/>
+<pre>
+let lib = sequencer(
+  {zzfx, say:(text)=>document.querySelector("p").innerHTML += text + "<br/>"},
+  `
+  a: zzfx(1.7,0,50,0.03,0.05,0.3,,2,,,,,,-0.1)
+  b: zzfx(1.5,0.5,270,,0.1,,1,1.5,,,,,,,,0.1,0.01)
+  seq1: a 1 a 1 a /8 b say(a) 7/8 a 1 a
+  seq2: a /8 a /8 a /8 say(mooo) seq1 5/4 seq1
+  `
+);
+
+function play(){
+  lib(document.getElementById("program").value).play();
+}
+</pre>
+
