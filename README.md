@@ -12,6 +12,7 @@ playing sequence with such name in parralel.
 
 Example:
 
+```typescript
   let lib = sequencer(
     {zzfx:zzfx, say:(text)=>document.querySelector("p").innerHTML += text + "
   "},
@@ -25,13 +26,15 @@ Example:
 
   lib("say(hi) seq2 1 b 0.5 b b 0.5 b b b").play();
 
+```
+
 == API ==
 
-  import sequencer from "./sequencer";
+```import sequencer from "./sequencer";```
 
 and/or 
 
-  import {SequencePlayer, SequenceBuilder, SequenceCollection} from "./sequencer";
+```import {SequencePlayer, SequenceBuilder, SequenceCollection} from "./sequencer";```
 
 SequencePlayer is created with [time, callback][] and can be used either by calling methods continue(deltaTime) or play(timeScaleInMilliseconds).
 Can by used by itself if you are not interested in string-encoded sequences.
