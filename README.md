@@ -1,4 +1,5 @@
 # sequencer
+
 Sheduling function calls at certain time. Can be used for playing notes, spawning enemies etc.
 
 Schedule are written as strings in following format.
@@ -28,20 +29,20 @@ Example:
 
 ```
 
-== API ==
+## API
 
-```import sequencer from "./sequencer";```
+```typescript import sequencer from "./sequencer";```
 
 and/or 
 
-```import {SequencePlayer, SequenceBuilder, SequenceCollection} from "./sequencer";```
+```typescript import {SequencePlayer, SequenceBuilder, SequenceCollection} from "./sequencer";```
 
-SequencePlayer is created with [time, callback][] and can be used either by calling methods continue(deltaTime) or play(timeScaleInMilliseconds).
+**SequencePlayer** is created with [time, callback][] and can be used either by calling methods continue(deltaTime) or play(timeScaleInMilliseconds).
 Can by used by itself if you are not interested in string-encoded sequences.
 
-SequenceBuilder creates sequences that SequencePlayer can use from formatted string and library of sequences and function in form of "map name=>function/sequence as string"
+**SequenceBuilder** creates sequences that SequencePlayer can use from formatted string and library of sequences and function in form of "map name=>function/sequence as string"
 
-SequenceCollection is created with a map of functions and a string with sequence codes on each line starting with "name:".
+**SequenceCollection** is created with a map of functions and a string with sequence codes on each line starting with "name:".
 Has methods add(id, sequenceString) to add sequence and seq(id) to get it by id.
 
-sequencer(default export) - same parameters as SequenceCollection. Returns a function that from sequenceCode creates a SequencePlayer.
+**sequencer(default export)** - same parameters as SequenceCollection. Returns a function that from sequenceCode creates a SequencePlayer.
